@@ -1,30 +1,89 @@
-
+﻿# ─────────────────────────────────────────────
 # Python virtual environments
+# ─────────────────────────────────────────────
 .venv/
 .venv*/
 venv/
+env/
+ENV/
+.env/
 
-# Python cache and test artifacts
+# ─────────────────────────────────────────────
+# Python bytecode and cache
+# ─────────────────────────────────────────────
 __pycache__/
-.pycache/
 *.py[cod]
+*$py.class
+.pycache/
+*.pyo
+
+# ─────────────────────────────────────────────
+# Testing and coverage
+# ─────────────────────────────────────────────
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+coverage.xml
+*.cover
+.tox/
+nosetests.xml
+test-results/
 
+# ─────────────────────────────────────────────
 # Secrets and environment variables
+# ─────────────────────────────────────────────
 .env
 .env.*
 !.env.example
 
-# IDE and operating system files
-.vscode/
-.DS_Store
-Thumbs.db
-
-# Local databases
+# ─────────────────────────────────────────────
+# Local databases (never commit production data)
+# ─────────────────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
 *.db-wal
 *.db-shm
+data/maintenance.db
+
+# ─────────────────────────────────────────────
+# IDE and editor files
+# ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.c9/
+
+# ─────────────────────────────────────────────
+# Operating system files
+# ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ─────────────────────────────────────────────
+# Build and distribution artifacts
+# ─────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+.eggs/
+*.egg
+
+# ─────────────────────────────────────────────
+# Logs
+# ─────────────────────────────────────────────
+*.log
+logs/

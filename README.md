@@ -1,4 +1,4 @@
-﻿# ðŸ”§ AI-Powered Maintenance Ticket Prioritization Agent
+# ðŸ”§ AI-Powered Maintenance Ticket Prioritization Agent
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
@@ -30,6 +30,7 @@
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
 - [Quick Start â€” Run Locally](#quick-start--run-locally)
+- [Run with VS Code](#-run-with-vs-code-one-click)
 - [Environment Configuration](#environment-configuration)
 - [API Reference](#api-reference)
 - [Evaluation Results](#evaluation-results)
@@ -228,6 +229,42 @@ python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --reload
 | â¤ï¸ Health Check | http://127.0.0.1:8000/api/health |
 
 > **Tip:** Click **"Reset / Seed Benchmark Dataset"** in the dashboard header to pre-load sample tickets on first run.
+
+---
+
+## 💻 Run with VS Code (One-Click)
+
+This repository includes pre-configured `.vscode/` settings, debuggers, and tasks for a zero-configuration developer experience.
+
+> 📖 **Full Deep-Dive Guide:** For in-depth extension recommendations, shortcut cheatsheets, troubleshooting, and CI/CD workflow, see [docs/VSCODE_SETUP_GUIDE.md](docs/VSCODE_SETUP_GUIDE.md).
+
+### 1. Open the Project
+```powershell
+code d:\ai-powered-maintenance-ticket-prioritization-agent
+```
+
+### 2. Select Interpreter
+- Press `Ctrl + Shift + P`
+- Type: `Python: Select Interpreter`
+- Choose: `.venv` (Python 3.12.x)
+
+### 3. Run & Debug via `F5`
+Press **`F5`** or go to **Run and Debug** (`Ctrl + Shift + D`):
+- **`🚀 FastAPI Server (Dev)`** — Launches the server at `http://127.0.0.1:8000` with hot-reload enabled.
+- **`🧪 Run All Tests`** — Executes `pytest tests/ -v` inside the VS Code debugger.
+- **`🌐 E2E API Test`** — Executes the complete 28-point end-to-end API test suite (`e2e_test.py`).
+
+### 4. Run Pre-Configured Tasks
+Press `Ctrl + Shift + P` → select **Tasks: Run Task**:
+| Task | Description |
+|:---|:---|
+| `🚀 Start Dev Server` | Runs uvicorn with live reload |
+| `🧪 Run All Tests` | Runs pytest with verbose reporting |
+| `🌐 Run E2E Tests` | Runs full live API suite |
+| `📦 Install Dependencies` | Runs `pip install -r requirements.txt` |
+| `🐳 Docker Build` | Builds local Docker image |
+| `🐳 Docker Run` | Runs container on port 8000 |
+| `🔄 Git Push to Deploy` | Pushes to GitHub & triggers Railway deploy |
 
 ---
 

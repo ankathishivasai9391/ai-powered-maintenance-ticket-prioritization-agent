@@ -1,66 +1,65 @@
-# AI-Powered Maintenance Ticket Prioritization Agent
+# 🚀 AI-Powered Maintenance Ticket Prioritization Agent
 
-A full-stack application designed to organize maintenance requests and prioritize tickets based on their urgency and impact. Built with Python, FastAPI, SQLite, and a web dashboard, the project demonstrates backend API development, data management, testing, and deployment preparation.
+A full-stack application for managing maintenance tickets and identifying issues that need attention first. This project combines a Python backend, a web dashboard, and SQLite database storage to provide a structured maintenance-ticket workflow.
 
-**Repository:** [View Source Code on GitHub](https://github.com/ankathishivasai9391/ai-powered-maintenance-ticket-prioritization-agent)
+## 📌 Project Overview
 
-## Overview
+Maintenance teams often receive multiple requests, but not every issue has the same level of urgency.
 
-Maintenance teams often handle multiple requests at the same time. Without a consistent prioritization process, urgent issues can be overlooked and response times can increase.
+This application helps organize maintenance tickets and prioritize them using the prioritization logic implemented in the system. It provides a centralized dashboard and backend APIs for working with maintenance data.
 
-This project provides a centralized application for managing maintenance tickets, reviewing priority classifications, and supporting more organized maintenance workflows.
+## ✨ Features
 
-## Key Features
+- **Ticket Prioritization:** Classifies maintenance tickets using the application's implemented prioritization rules.
+- **Web Dashboard:** Provides an interface for viewing maintenance-ticket information.
+- **FastAPI Backend:** Exposes application functionality through REST APIs.
+- **SQLite Database:** Stores maintenance data locally.
+- **CSV Data Initialization:** Supports loading initial ticket data when the database is empty.
+- **Interactive API Documentation:** Explore available endpoints using Swagger UI.
+- **Automated Testing:** Includes tests for validating application behavior.
+- **Deployment Ready:** Includes a Procfile for starting the application with Uvicorn.
 
-- **Ticket Prioritization:** Classifies maintenance tickets using the prioritization logic implemented in the application.
-- **Maintenance Dashboard:** Provides a web interface for viewing ticket information.
-- **REST API:** Exposes backend functionality through FastAPI.
-- **SQLite Database:** Stores application data locally.
-- **CSV-Based Initialization:** Supports loading initial ticket data when the database is empty, according to the implemented initialization logic.
-- **API Documentation:** Provides interactive API documentation through Swagger UI.
-- **Automated Testing:** Includes tests to help validate application behavior.
-- **Deployment Configuration:** Includes a Procfile for starting the application with Uvicorn.
+## 🛠️ Tech Stack
 
-## Technology Stack
+- **Backend:** Python, FastAPI
+- **Frontend:** Web dashboard
+- **Database:** SQLite
+- **API Documentation:** Swagger UI, OpenAPI
+- **Testing:** Pytest
+- **Server:** Uvicorn
+- **Tools:** Visual Studio Code, Git, GitHub
 
-| Component | Technology |
-|---|---|
-| Backend | Python, FastAPI |
-| Frontend | Existing web dashboard |
-| Database | SQLite |
-| API Documentation | Swagger UI, OpenAPI |
-| Testing | Pytest |
-| Server | Uvicorn |
-| Version Control | Git, GitHub |
-
-## Architecture
+## 🏗️ Application Architecture
 
 ```text
-User
-  |
-  v
-Web Dashboard
-  |
-  v
-FastAPI Backend
-  |
-  +---- Ticket Prioritization Logic
-  |
-  +---- Ticket Management
-  |
-  v
-SQLite Database
+          User
+           |
+           v
+     Web Dashboard
+           |
+           v
+      FastAPI Backend
+           |
+     +-----+------+
+     |            |
+     v            v
+Ticket Logic   API Operations
+     |            |
+     +-----+------+
+           |
+           v
+      SQLite Database
 ```
 
-## Project Structure
+## 📂 Project Structure
 
 ```text
 ai-powered-maintenance-ticket-prioritization-agent/
+│
 ├── backend/
 │   └── app.py
 ├── frontend/
 ├── data/
-│   └── maintenance_tickets.csv
 ├── tests/
 ├── requirements.txt
 ├── Procfile
@@ -68,105 +67,99 @@ ai-powered-maintenance-ticket-prioritization-agent/
 └── README.md
 ```
 
-*The structure above is representative. Refer to the repository for the complete file listing.*
+Refer to the repository for the complete project structure.
 
-## Getting Started
+## ⚙️ Installation and Setup
 
 ### Prerequisites
 
-- Python 3.10 or a version supported by the project dependencies
+- Python installed on your system
 - Git
 - Visual Studio Code (recommended)
 
-### 1. Clone the repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/ankathishivasai9391/ai-powered-maintenance-ticket-prioritization-agent.git
+```
+
+### Step 2: Open the Project Folder
+
+```bash
 cd ai-powered-maintenance-ticket-prioritization-agent
 ```
 
-### 2. Create and activate a virtual environment
+### Step 3: Create a Virtual Environment
 
-**Windows:**
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows:
 
 ```cmd
-python -m venv .venv
 .venv\Scripts\activate
 ```
 
-**macOS/Linux:**
+### Step 4: Install Dependencies
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Run the application
+### Step 5: Run the Application
 
 ```bash
 python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000
 ```
 
-If port `8000` is unavailable, choose another free port.
+If port `8000` is unavailable, use another available port.
 
-### 5. Access the application
+## 🌐 Application URLs
+
+Once the server starts, open these URLs in your browser.
 
 | Resource | URL |
 |---|---|
-| Web Dashboard | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) |
-| Interactive API Docs | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) |
-| Health Check | [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health) |
+| Web Dashboard | http://127.0.0.1:8000/ |
+| API Documentation | http://127.0.0.1:8000/docs |
+| Health Check | http://127.0.0.1:8000/api/health |
 
-Keep the terminal running while using the application.
+## 🔌 API Documentation
 
-## API Documentation
+The application uses FastAPI to provide backend API functionality.
 
-The application uses FastAPI to expose backend functionality. Open `/docs` while the server is running to explore the implemented endpoints and try supported requests interactively.
+Open `/docs` to explore the implemented endpoints, view request and response schemas, and test supported operations.
 
 Health-check endpoint:
 
-```http
-GET /api/health
-```
+`GET /api/health`
 
-Consult the interactive API documentation for the actual request formats, response schemas, and available operations.
+## 🗄️ Database Management
 
-## Database
+SQLite is used for local data persistence. The database location can be configured using the `DB_PATH` environment variable.
 
-The application uses SQLite for local data storage. The database location can be configured through the `DB_PATH` environment variable; otherwise, the application uses its configured default path.
+The application supports initializing the database with CSV data when the database contains no records, according to the existing implementation.
 
-The initialization logic can load initial ticket records from CSV when the database is empty.
+For production deployment, configure persistent storage or a managed database to protect data across restarts and redeployments.
 
-For production use, configure persistent storage or a managed database so important records are retained across deployments and restarts.
+## 🧪 Running Tests
 
-## Testing
-
-Run the test suite from the project root:
+Run the automated test suite from the project root:
 
 ```bash
 python -m pytest
 ```
 
-For verbose output:
+For detailed test output:
 
 ```bash
 python -m pytest -v
 ```
 
-Run tests after making changes to check that existing functionality continues to work.
+## ☁️ Deployment
 
-## Deployment
-
-The repository includes a `Procfile` for launching the application with Uvicorn.
-
-For a compatible hosting platform, use:
+The project includes a `Procfile` for starting the FastAPI application with Uvicorn.
 
 **Build command**
 
@@ -180,43 +173,41 @@ pip install -r requirements.txt
 uvicorn backend.app:app --host 0.0.0.0 --port $PORT
 ```
 
-Configure environment variables and persistent storage according to the hosting provider. SQLite data stored on an ephemeral filesystem may be lost when the service restarts or is redeployed.
+Set the commands in your hosting provider's configuration. Configure persistent database storage before using the application for important production records.
 
-## Future Enhancements
+## 🔮 Future Enhancements
 
-Potential extensions include:
-
-- Machine-learning-based priority prediction.
+- Machine-learning-based ticket priority prediction.
 - Natural-language processing for maintenance descriptions.
 - Explainable priority recommendations.
-- Advanced filtering, analytics, and reporting.
-- Notifications for critical tickets.
-- Role-based access control and audit history.
-- Integration with external maintenance management systems.
+- Advanced ticket search and filtering.
+- Maintenance analytics and reporting.
+- Notifications for critical issues.
+- Role-based access control.
+- Integration with external maintenance systems.
 
-These are proposed enhancements rather than existing features unless implemented in the code.
+These are potential future improvements, not features claimed to be implemented already.
 
-## Skills Demonstrated
+## 🎓 What I Learned
 
-- Python backend development
-- REST API design with FastAPI
-- Relational data persistence using SQLite
-- CSV data processing
-- Automated testing
-- Git and GitHub workflows
-- Application configuration and deployment preparation
+Through this project, I gained practical experience with:
 
-## Author
+- Developing backend APIs using Python and FastAPI.
+- Working with SQLite and structured data.
+- Organizing application logic.
+- Testing application functionality.
+- Managing source code using Git and GitHub.
+- Preparing a web application for deployment.
+
+## 👨‍💻 Author
 
 **Shivasai Ankathi**
 
-- GitHub: [ankathishivasai9391](https://github.com/ankathishivasai9391)
-- Project: [AI-Powered Maintenance Ticket Prioritization Agent](https://github.com/ankathishivasai9391/ai-powered-maintenance-ticket-prioritization-agent)
+GitHub: [ankathishivasai9391](https://github.com/ankathishivasai9391)
 
-## License
-
-No open-source license has been specified. Add a `LICENSE` file if you decide to publish the project under a particular license.
+**Project Repository:** [AI-Powered Maintenance Ticket Prioritization Agent](https://github.com/ankathishivasai9391/ai-powered-maintenance-ticket-prioritization-agent)
 
 ---
 
-If this project is useful to you, consider giving the repository a ⭐.
+⭐ If you find this project interesting, consider starring the repository.
+

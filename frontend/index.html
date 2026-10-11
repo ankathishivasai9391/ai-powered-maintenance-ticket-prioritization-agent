@@ -1106,6 +1106,143 @@
       border-color: #F87171;
     }
 
+    /* High-Contrast Dashboard Evaluation Component */
+    .card-evaluation {
+      background: #FFFFFF !important;
+      border: 1px solid #E2E8F0 !important;
+      border-radius: 16px !important;
+      padding: 26px 30px !important;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
+      margin-bottom: 32px;
+    }
+
+    .evaluation-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .evaluation-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-refresh-eval-pill {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-refresh-eval-pill:hover {
+      background: #F1F5F9;
+      border-color: #94A3B8;
+      color: #0F172A;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    .evaluation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .evaluation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Box: Benchmark Validation Accuracy (Soft Mint Green Tint) */
+    .eval-box-mint {
+      background: #F0FDF4;
+      border: 1px solid #DCFCE7;
+      border-radius: 14px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .eval-box-mint h4 {
+      color: #0F172A;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eval-box-mint .eval-subtitle {
+      font-size: 12.5px;
+      color: #475569;
+      margin-bottom: 14px;
+    }
+
+    .eval-box-mint ul {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 0;
+      color: #1E293B;
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    .eval-box-mint li strong.metric-highlight {
+      color: #059669;
+      font-weight: 800;
+    }
+
+    /* Right Box: Production Limitations & Recommendations (Warm Cream-Amber Tint) */
+    .eval-box-amber {
+      background: #FFFBEB;
+      border: 1px solid #FEF3C7;
+      border-radius: 14px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .eval-box-amber h4 {
+      color: #0F172A;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eval-box-amber ul {
+      list-style-type: disc;
+      padding-left: 20px;
+      margin: 0;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    /* Emerald accent for evaluation metric numbers */
+    .metric-highlight {
+      color: #059669;
+      font-weight: 800;
+    }
+
     /* Modal Dialog */
     .modal-overlay {
       position: fixed;
@@ -1401,26 +1538,35 @@
     </div>
 
     <!-- Model Evaluation & Performance Rubric -->
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">
-          <svg width="20" height="20" fill="none" stroke="#3478F6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          Model Evaluation & Assessment Performance Rubric
+    <div class="card-evaluation">
+      <div class="evaluation-header">
+        <span class="evaluation-title">
+          <svg width="20" height="20" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Model Evaluation &amp; Assessment Performance Rubric
         </span>
-        <button class="preset-btn preset-pitch" onclick="fetchEvaluation()">Refresh Evaluation</button>
+        <button class="btn-refresh-eval-pill" onclick="fetchEvaluation()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          Refresh Evaluation
+        </button>
       </div>
 
-      <div id="evaluation-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 18px; border-radius: 14px;">
-          <h4 style="color: #142D59; margin-bottom: 8px; font-weight: 700;">Benchmark Validation Accuracy</h4>
-          <p style="font-size: 13px; color: #7184A3;">Evaluated against benchmark dataset (maintenance_tickets.csv):</p>
-          <ul style="margin-top: 10px; font-size: 13.5px; padding-left: 20px; color: #455B7B;" id="eval-metrics-list">
+      <div class="evaluation-grid" id="evaluation-content">
+        <div class="eval-box-mint">
+          <h4>
+            <svg width="16" height="16" fill="none" stroke="#059669" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4"></path><circle cx="12" cy="12" r="9" stroke="#059669" stroke-width="2"></circle></svg>
+            Benchmark Validation Accuracy
+          </h4>
+          <p class="eval-subtitle">Evaluated against labeled benchmark dataset (maintenance_tickets.csv):</p>
+          <ul id="eval-metrics-list">
             <li>Loading evaluation metrics...</li>
           </ul>
         </div>
-        <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 18px; border-radius: 14px;">
-          <h4 style="color: #075985; margin-bottom: 8px; font-weight: 700;">Production Limitations & Recommendations</h4>
-          <ul style="font-size: 13px; color: #7184A3; padding-left: 20px;" id="eval-limits-list">
+        <div class="eval-box-amber">
+          <h4>
+            <svg width="16" height="16" fill="none" stroke="#D97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path></svg>
+            Production Limitations &amp; Recommendations
+          </h4>
+          <ul id="eval-limits-list">
             <li>Loading limitations...</li>
           </ul>
         </div>
@@ -1845,13 +1991,13 @@
         const e = await res.json();
         
         document.getElementById('eval-metrics-list').innerHTML = `
-          <li style="margin-bottom: 6px;">Total Labeled Samples: <strong>${e.total_labeled_examples}</strong></li>
-          <li style="margin-bottom: 6px;">Category Accuracy: <strong style="color: #087A55;">${(e.category_accuracy * 100).toFixed(1)}%</strong> (${e.category_correct}/${e.total_labeled_examples})</li>
-          <li style="margin-bottom: 6px;">Severity Accuracy: <strong style="color: #1D4ED8;">${(e.severity_accuracy * 100).toFixed(1)}%</strong> (${e.severity_correct}/${e.total_labeled_examples})</li>
-          <li>Methodology: <em>${e.method}</em></li>
+          <li style="margin-bottom: 6px;">Total Labeled Samples: <strong class="metric-highlight">${e.total_labeled_examples}</strong></li>
+          <li style="margin-bottom: 6px;">Category Accuracy: <strong class="metric-highlight">${(e.category_accuracy * 100).toFixed(1)}%</strong> <span style="color:#475569;">(${e.category_correct}/${e.total_labeled_examples} correct)</span></li>
+          <li style="margin-bottom: 6px;">Severity Accuracy: <strong class="metric-highlight">${(e.severity_accuracy * 100).toFixed(1)}%</strong> <span style="color:#475569;">(${e.severity_correct}/${e.total_labeled_examples} correct)</span></li>
+          <li style="margin-bottom: 6px;">Methodology: <em style="color:#334155;">${e.method}</em></li>
         `;
 
-        document.getElementById('eval-limits-list').innerHTML = e.limitations.map(l => `<li style="margin-bottom: 6px;">${l}</li>`).join('');
+        document.getElementById('eval-limits-list').innerHTML = e.limitations.map(l => `<li style="margin-bottom: 7px;">${l}</li>`).join('');
       } catch(err) {
         console.error("Failed to fetch evaluation", err);
       }

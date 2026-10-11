@@ -7,9 +7,72 @@ from typing import List, Dict, Any, Tuple, Optional
 
 
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+except Exception:
+    import numpy as np
 
-from sklearn.metrics.pairwise import cosine_similarity
+    class TfidfVectorizer:
+        def __init__(self, stop_words="english", ngram_range=(1, 2)):
+            self.stop_words = {"the", "a", "an", "in", "on", "for", "with", "at", "by", "from", "to", "and", "is", "of", "or"}
+            self.vocab = {}
+            self.idf = {}
+            self.ngram_range = ngram_range
+
+        def _tokenize(self, text):
+            tokens = re.findall(r"\b\w+\b", (text or "").lower())
+            words = [w for w in tokens if w not in self.stop_words and len(w) > 1]
+            ngrams = list(words)
+            if self.ngram_range == (1, 2) and len(words) > 1:
+                for i in range(len(words) - 1):
+                    ngrams.append(f"{words[i]} {words[i+1]}")
+            return ngrams
+
+        def fit_transform(self, docs):
+            doc_tokens = [self._tokenize(d) for d in docs]
+            all_tokens = set()
+            for tokens in doc_tokens:
+                all_tokens.update(tokens)
+            self.vocab = {term: idx for idx, term in enumerate(sorted(all_tokens))}
+            n_docs = max(len(docs), 1)
+            self.idf = {}
+            for term in self.vocab:
+                doc_count = sum(1 for tokens in doc_tokens if term in tokens)
+                self.idf[term] = math.log((1 + n_docs) / (1 + doc_count)) + 1.0
+
+            matrix = np.zeros((len(docs), len(self.vocab)))
+            for row_idx, tokens in enumerate(doc_tokens):
+                tf = {}
+                for t in tokens:
+                    tf[t] = tf.get(t, 0) + 1
+                for term, count in tf.items():
+                    if term in self.vocab:
+                        col_idx = self.vocab[term]
+                        matrix[row_idx, col_idx] = count * self.idf[term]
+                norm = np.linalg.norm(matrix[row_idx])
+                if norm > 0:
+                    matrix[row_idx] /= norm
+            return matrix
+
+        def transform(self, docs):
+            matrix = np.zeros((len(docs), len(self.vocab)))
+            for row_idx, doc in enumerate(docs):
+                tokens = self._tokenize(doc)
+                tf = {}
+                for t in tokens:
+                    tf[t] = tf.get(t, 0) + 1
+                for term, count in tf.items():
+                    if term in self.vocab:
+                        col_idx = self.vocab[term]
+                        matrix[row_idx, col_idx] = count * self.idf.get(term, 1.0)
+                norm = np.linalg.norm(matrix[row_idx])
+                if norm > 0:
+                    matrix[row_idx] /= norm
+            return matrix
+
+    def cosine_similarity(query_vec, matrix):
+        return np.dot(query_vec, matrix.T)
 
 
 

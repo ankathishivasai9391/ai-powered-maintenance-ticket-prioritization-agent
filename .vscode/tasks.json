@@ -1,0 +1,107 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🚀 Start Dev Server",
+            "type": "shell",
+            "command": "python",
+            "args": ["-m", "uvicorn", "backend.app:app", "--host", "127.0.0.1", "--port", "8000", "--reload"],
+            "options": {
+                "env": { "PYTHONPATH": "${workspaceFolder}" }
+            },
+            "isBackground": true,
+            "problemMatcher": [],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "echo": true
+            }
+        },
+        {
+            "label": "🧪 Run All Tests",
+            "type": "shell",
+            "command": "python",
+            "args": ["-m", "pytest", "tests/", "-v", "--tb=short"],
+            "options": {
+                "env": { "PYTHONPATH": "${workspaceFolder}" }
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🌐 Run E2E Tests",
+            "type": "shell",
+            "command": "python",
+            "args": ["e2e_test.py"],
+            "options": {
+                "env": { "PYTHONPATH": "${workspaceFolder}" }
+            },
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "📦 Install Dependencies",
+            "type": "shell",
+            "command": "pip",
+            "args": ["install", "-r", "requirements.txt"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🐳 Docker Build",
+            "type": "shell",
+            "command": "docker",
+            "args": ["build", "-t", "ticket-agent", "."],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🐳 Docker Run",
+            "type": "shell",
+            "command": "docker",
+            "args": ["run", "-p", "8000:8000", "-e", "PORT=8000", "ticket-agent"],
+            "group": "build",
+            "dependsOn": "🐳 Docker Build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "wait-for-server",
+            "type": "shell",
+            "command": "python",
+            "args": ["-c", "import time; time.sleep(3); print('Server warm-up complete')"],
+            "presentation": {
+                "reveal": "silent"
+            }
+        },
+        {
+            "label": "🔄 Git Push to Deploy",
+            "type": "shell",
+            "command": "git",
+            "args": ["push", "origin", "main"],
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

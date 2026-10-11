@@ -1,0 +1,1958 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Maintenance Ticket Prioritization Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #F3F7FF;
+      --bg-card: #FFFFFF;
+      --border-color: #DCE7F5;
+      --border-focus: #3B82F6;
+      
+      --text-main: #142D59;
+      --text-body: #455B7B;
+      --text-muted: #7184A3;
+
+      --primary-blue: #3478F6;
+      --primary-blue-dark: #245BE8;
+      
+      --sev-critical-bg: #FFF0F0;
+      --sev-critical-text: #B42318;
+      --sev-critical-border: #FECDCA;
+
+      --sev-high-bg: #FFF4E5;
+      --sev-high-text: #B45309;
+      --sev-high-border: #FED7AA;
+
+      --sev-medium-bg: #FFFBDB;
+      --sev-medium-text: #854D0E;
+      --sev-medium-border: #FEF08A;
+
+      --sev-low-bg: #EAFBF1;
+      --sev-low-text: #087A55;
+      --sev-low-border: #A7F3D0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #F3F7FF 0%, #FFFFFF 50%, #F4F9FF 100%);
+      color: var(--text-body);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    /* Top Navigation Header */
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid #DCE7F5;
+      padding: 18px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(42, 75, 130, 0.03);
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #3478F6, #245BE8);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(52, 120, 246, 0.25);
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #142D59;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: #7184A3;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #EAFBF1;
+      border: 1px solid #A7F3D0;
+      color: #087A55;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #10B981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10B981;
+      animation: pulse 2s infinite;
+    }
+
+    .status-badge.status-offline {
+      background: #FEF2F2 !important;
+      border: 1px solid #FECACA !important;
+      color: #DC2626 !important;
+    }
+
+    .status-badge.status-offline .pulse-dot {
+      background-color: #EF4444 !important;
+      box-shadow: 0 0 8px #EF4444 !important;
+      animation: none !important;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    /* Layout Container */
+    .container {
+      max-width: 1380px;
+      margin: 28px auto;
+      padding: 0 24px;
+    }
+
+    /* KPI Summary Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .metric-card {
+      border-radius: 16px;
+      padding: 22px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      box-shadow: 0 4px 14px rgba(42, 75, 130, 0.04);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(42, 75, 130, 0.08);
+    }
+
+    .metric-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+    }
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: 800;
+      margin-top: 6px;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .metric-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 4 Distinct Pastel Cards */
+    .metric-card.card-blue {
+      background-color: #EFF6FF;
+      border: 1px solid #DBEAFE;
+    }
+    .metric-card.card-blue .metric-title { color: #1E40AF; }
+    .metric-card.card-blue .metric-value { color: #1E3A8A; }
+    .metric-card.card-blue .metric-sub { color: #3B82F6; }
+    .metric-card.card-blue .metric-icon-box { background: #DBEAFE; color: #2563EB; }
+
+    .metric-card.card-amber {
+      background-color: #FFFBEB;
+      border: 1px solid #FEF3C7;
+    }
+    .metric-card.card-amber .metric-title { color: #92400E; }
+    .metric-card.card-amber .metric-value { color: #78350F; }
+    .metric-card.card-amber .metric-sub { color: #D97706; }
+    .metric-card.card-amber .metric-icon-box { background: #FEF3C7; color: #D97706; }
+
+    .metric-card.card-red {
+      background-color: #FEF2F2;
+      border: 1px solid #FEE2E2;
+    }
+    .metric-card.card-red .metric-title { color: #991B1B; }
+    .metric-card.card-red .metric-value { color: #7F1D1D; }
+    .metric-card.card-red .metric-sub { color: #DC2626; }
+    .metric-card.card-red .metric-icon-box { background: #FEE2E2; color: #DC2626; }
+
+    .metric-card.card-green {
+      background-color: #ECFDF5;
+      border: 1px solid #D1FAE5;
+    }
+    .metric-card.card-green .metric-title { color: #065F46; }
+    .metric-card.card-green .metric-value { color: #064E3B; }
+    .metric-card.card-green .metric-sub { color: #059669; }
+    .metric-card.card-green .metric-icon-box { background: #D1FAE5; color: #059669; }
+
+    /* Main Workspace 2-Column Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Main Panels */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #DCE7F5;
+      border-radius: 20px;
+      padding: 28px 32px;
+      box-shadow: 0 8px 28px rgba(42, 75, 130, 0.07);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #DCE7F5;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #142D59;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #142D59;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: #FBFDFF;
+      border: 1px solid #CAD8EB;
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #23395D;
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 200ms ease;
+    }
+
+    input[type="text"]::placeholder, textarea::placeholder {
+      color: #8292AA;
+    }
+
+    input[type="text"]:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.13);
+      background: #FFFFFF;
+    }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    /* Quick Scenario Presets (6 Distinct Pastel Chips) */
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .preset-btn {
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 200ms ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    }
+
+    .preset-solar {
+      background: #FFF7DF;
+      border: 1px solid #FFE29A;
+      color: #995B00;
+    }
+    .preset-solar:hover {
+      background: #FFF0C2;
+      border-color: #FCD34D;
+    }
+
+    .preset-wind {
+      background: #E8FBF2;
+      border: 1px solid #A7F3D0;
+      color: #087A55;
+    }
+    .preset-wind:hover {
+      background: #D1FAE5;
+      border-color: #6EE7B7;
+    }
+
+    .preset-scada {
+      background: #F2EAFF;
+      border: 1px solid #D8B4FE;
+      color: #6D28D9;
+    }
+    .preset-scada:hover {
+      background: #E9D5FF;
+      border-color: #C084FC;
+    }
+
+    .preset-hydro {
+      background: #E8F6FF;
+      border: 1px solid #A5D8FF;
+      color: #075985;
+    }
+    .preset-hydro:hover {
+      background: #BAE6FD;
+      border-color: #7DD3FC;
+    }
+
+    .preset-pitch {
+      background: #EAF1FF;
+      border: 1px solid #B9CEFF;
+      color: #1D4ED8;
+    }
+    .preset-pitch:hover {
+      background: #DBEAFE;
+      border-color: #93C5FD;
+    }
+
+    .preset-grid {
+      background: #FFF0E8;
+      border: 1px solid #FDBA9A;
+      color: #C2410C;
+    }
+    .preset-grid:hover {
+      background: #FFEDD5;
+      border-color: #FDBA74;
+    }
+
+    /* Action Buttons */
+    .btn-group {
+      display: flex;
+      gap: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 13px 22px;
+      border: 0;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 200ms ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3478F6, #245BE8);
+      color: #FFFFFF;
+      box-shadow: 0 5px 14px rgba(37, 99, 235, 0.20);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.30);
+    }
+
+    .btn-secondary {
+      background: #F3F0FF;
+      color: #6338D8;
+      border: 1px solid #D8CCFF;
+    }
+
+    .btn-secondary:hover {
+      background: #EAE3FF;
+      border-color: #C4B5FD;
+    }
+
+    /* AI Diagnosis Empty State Panel with Hero Illustration */
+    .analysis-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px 20px;
+      border: 1.5px dashed #C8D7EA;
+      border-radius: 20px;
+      background: linear-gradient(160deg, #F6FAFF 0%, #FBFDFF 60%, #F2F8FD 100%);
+      transition: all 0.3s ease;
+    }
+
+    .empty-hero-container {
+      width: 100%;
+      max-width: 380px;
+      margin-bottom: 18px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid #D8E6F8;
+      box-shadow: 0 8px 24px rgba(35, 64, 110, 0.08);
+      background: #FFFFFF;
+    }
+
+    .empty-hero-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .empty-hero-container:hover .empty-hero-img {
+      transform: scale(1.02);
+    }
+
+    .empty-heading {
+      font-size: 18px;
+      font-weight: 800;
+      color: #142D59;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .empty-desc {
+      font-size: 13.5px;
+      color: #556B8D;
+      max-width: 440px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .empty-feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .empty-feature-tag {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #EDF4FE;
+      color: #1E40AF;
+      border: 1px solid #DBEAFE;
+    }
+
+    .btn-quick-sample-demo {
+      background: linear-gradient(135deg, #3478F6, #1D4ED8);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .btn-quick-sample-demo:hover {
+      background: linear-gradient(135deg, #2563EB, #1E40AF);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Severity Badges & Diagnosis Output Cards */
+    .severity-badge {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .sev-critical { background: #FFF0F0; color: #B42318; border: 1px solid #FECDCA; }
+    .sev-high { background: #FFF4E5; color: #B45309; border: 1px solid #FED7AA; }
+    .sev-medium { background: #FFFBDB; color: #854D0E; border: 1px solid #FEF08A; }
+    .sev-low { background: #EAFBF1; color: #087A55; border: 1px solid #A7F3D0; }
+
+    .score-meter {
+      background: #E2ECF8;
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      margin-top: 8px;
+      margin-bottom: 16px;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-insight-violet {
+      background: #F3EEFF;
+      border: 1px solid #DDD6FE;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-insight-green {
+      background: #EAFBF1;
+      border: 1px solid #A7F3D0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .card-insight-blue {
+      background: #EDF5FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+
+    .card-alert-rose {
+      background: #FFF1F2;
+      border: 1px solid #FECDD3;
+      color: #BE123C;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 13.5px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    /* Persisted Maintenance Queue (SQLite Database) Container & Header */
+    .card-queue {
+      background: #FFFFFF;
+      border: 1px solid #DCE7F5;
+      border-radius: 20px;
+      padding: 28px 32px;
+      box-shadow: 0 10px 35px rgba(35, 64, 110, 0.07);
+      margin-bottom: 32px;
+    }
+
+    .queue-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #173568;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .queue-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #E5EFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3478F6;
+    }
+
+    .btn-reset-seed {
+      background: #E8F3FF;
+      color: #1D63C5;
+      border: 1px solid #B9D8FF;
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 200ms ease;
+    }
+
+    .btn-reset-seed:hover {
+      background: #DCEBFF;
+      border-color: #93C5FD;
+      color: #1D4ED8;
+    }
+
+    /* Structured Queue Toolbar Card */
+    .queue-toolbar-card {
+      background: #F8FAFD;
+      border: 1px solid #DCE7F5;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(20, 45, 89, 0.03);
+    }
+
+    .toolbar-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 480px;
+    }
+
+    .search-box-inner {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon-svg {
+      position: absolute;
+      left: 14px;
+      color: #64748B;
+      pointer-events: none;
+    }
+
+    .filter-search-input {
+      width: 100%;
+      background: #FFFFFF !important;
+      border: 1px solid #CAD8EB !important;
+      color: #23395D !important;
+      border-radius: 12px !important;
+      padding: 10px 36px 10px 38px !important;
+      font-size: 13px !important;
+      box-shadow: 0 1px 3px rgba(20,45,89,0.03);
+    }
+
+    .filter-search-input:focus {
+      border-color: #3B82F6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+      display: none;
+    }
+    .clear-search-btn:hover { color: #475569; }
+
+    .btn-reset-filters {
+      padding: 8px 14px;
+      background: #FFFFFF;
+      border: 1px solid #DCE7F5;
+      color: #475569;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-reset-filters:hover {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+      color: #1E293B;
+    }
+
+    .table-record-counter {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1E40AF;
+      background: #EFF6FF;
+      border: 1px solid #DBEAFE;
+      padding: 6px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* Filter Pill Groups (1-Click, Zero Dropdown Overlapping!) */
+    .toolbar-filter-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar-subfilters-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed #DCE7F5;
+    }
+
+    .subfilter-block {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #556B8D;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .filter-pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #DCE7F5;
+      background: #FFFFFF;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .filter-pill:hover {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+    }
+
+    .filter-pill.active {
+      background: #2563EB;
+      border-color: #2563EB;
+      color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .filter-pill.pill-solar.active { background: #0284C7; border-color: #0284C7; color: #FFF; }
+    .filter-pill.pill-wind.active { background: #0D9488; border-color: #0D9488; color: #FFF; }
+    .filter-pill.pill-hydro.active { background: #0284C7; border-color: #0284C7; color: #FFF; }
+    .filter-pill.pill-grid.active { background: #D97706; border-color: #D97706; color: #FFF; }
+    .filter-pill.pill-battery.active { background: #7C3AED; border-color: #7C3AED; color: #FFF; }
+
+    .filter-pill.pill-critical.active { background: #DC2626; border-color: #DC2626; color: #FFF; }
+    .filter-pill.pill-high.active { background: #EA580C; border-color: #EA580C; color: #FFF; }
+    .filter-pill.pill-medium.active { background: #D97706; border-color: #D97706; color: #FFF; }
+    .filter-pill.pill-low.active { background: #059669; border-color: #059669; color: #FFF; }
+
+    .filter-pill.pill-open.active { background: #2563EB; border-color: #2563EB; color: #FFF; }
+    .filter-pill.pill-in_progress.active { background: #7C3AED; border-color: #7C3AED; color: #FFF; }
+    .filter-pill.pill-resolved.active { background: #059669; border-color: #059669; color: #FFF; }
+    .filter-pill.pill-escalated.active { background: #E11D48; border-color: #E11D48; color: #FFF; }
+
+    /* Table Container - Fits 100% on One Screen with No Horizontal Scrollbar */
+    .table-card-wrapper {
+      background: #FFFFFF;
+      border: 1px solid #DCE7F5;
+      border-radius: 16px;
+      width: 100%;
+      overflow-x: hidden;
+      box-shadow: 0 4px 16px rgba(20, 45, 89, 0.04);
+    }
+
+    table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12px;
+    }
+
+    /* Fixed Column Width Allocations - 100% Total across screen */
+    .col-id { width: 7%; }
+    .col-asset { width: 14%; }
+    .col-desc { width: 26%; }
+    .col-cat { width: 13%; }
+    .col-sev { width: 8%; }
+    .col-score { width: 7%; }
+    .col-team { width: 11%; }
+    .col-status { width: 8%; }
+    .col-actions { width: 6%; }
+
+    th {
+      text-align: left;
+      padding: 13px 8px;
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #CBD5E1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Column Header Pastel Colors */
+    th.col-id { background: #E3EEFF; color: #2457A7; }
+    th.col-asset { background: #DDF7F7; color: #126B75; }
+    th.col-desc { background: #F0E9FF; color: #6541A5; }
+    th.col-cat { background: #DFF7EC; color: #176B4D; }
+    th.col-sev { background: #FFF0E0; color: #A65312; }
+    th.col-score { background: #FFF6CC; color: #876300; }
+    th.col-team { background: #E0F2FE; color: #075985; }
+    th.col-status { background: #FFE7EF; color: #A61B50; }
+    th.col-actions { background: #E9EEF5; color: #475569; }
+
+    td {
+      padding: 14px 8px;
+      border-bottom: 1px solid #E2E8F0;
+      vertical-align: middle;
+      color: #334155;
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    /* Subtle Column Body Background Tints */
+    td.col-id { background: rgba(227,238,255,0.18); }
+    td.col-asset { background: rgba(221,247,247,0.18); }
+    td.col-desc { background: rgba(240,233,255,0.18); }
+    td.col-cat { background: rgba(223,247,236,0.18); }
+    td.col-sev { background: rgba(255,240,224,0.18); }
+    td.col-score { background: rgba(255,246,204,0.18); }
+    td.col-team { background: rgba(224,242,254,0.18); }
+    td.col-status { background: rgba(255,231,239,0.18); }
+    td.col-actions { background: rgba(233,238,245,0.18); }
+
+    tbody tr:hover td {
+      background-color: #EAF4FF !important;
+    }
+
+    .badge-ticket-id {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid #DBEAFE;
+      padding: 4px 7px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .asset-display-box {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .badge-asset {
+      background: #E8F8FA;
+      color: #126A75;
+      border: 1px solid #B8ECF2;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11.5px;
+      display: inline-block;
+      line-height: 1.3;
+    }
+
+    .asset-unit-label {
+      font-size: 10.5px;
+      color: #64748B;
+      font-weight: 600;
+      padding-left: 2px;
+    }
+
+    .cell-desc {
+      background: #FFFFFF;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+      width: 100%;
+      word-break: break-word;
+      line-height: 1.45;
+      font-size: 12px;
+      color: #1E293B;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .badge-category {
+      background: #F3EEFF;
+      color: #6941C6;
+      border: 1px solid #DDD6FE;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      display: inline-block;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    /* Severity Badges */
+    .sev-critical { background: #FFE8E8; color: #B42318; border: 1px solid #FECDCA; }
+    .sev-high { background: #FFF0DE; color: #B45309; border: 1px solid #FED7AA; }
+    .sev-medium { background: #FFF8D9; color: #8A6500; border: 1px solid #FEF08A; }
+    .sev-low { background: #E6F8ED; color: #18794E; border: 1px solid #A7F3D0; }
+
+    /* Priority Score Badges */
+    .score-badge-red { background: #FFE8E8; color: #B42318; border: 1px solid #FECDCA; }
+    .score-badge-orange { background: #FFF0DE; color: #B45309; border: 1px solid #FED7AA; }
+    .score-badge-amber { background: #FFF8D9; color: #8A6500; border: 1px solid #FEF08A; }
+    .score-badge-green { background: #E6F8ED; color: #18794E; border: 1px solid #A7F3D0; }
+
+    .priority-pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .score-sub-label {
+      font-size: 9.5px;
+      color: #7184A3;
+      font-weight: 700;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    .badge-team {
+      background: #ECFDF5;
+      color: #087A65;
+      border: 1px solid #A7F3D0;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 11px;
+      display: inline-block;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    /* Workflow Status Dropdown Styles */
+    .status-select {
+      padding: 6px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .status-select-open {
+      background: #E8F2FF !important;
+      color: #2459B8 !important;
+      border: 1px solid #B9CEFF !important;
+    }
+    .status-select-in_progress {
+      background: #F0EAFE !important;
+      color: #6941C6 !important;
+      border: 1px solid #DDD6FE !important;
+    }
+    .status-select-resolved {
+      background: #E6F8ED !important;
+      color: #18794E !important;
+      border: 1px solid #A7F3D0 !important;
+    }
+    .status-select-escalated {
+      background: #FFE8ED !important;
+      color: #BE123C !important;
+      border: 1px solid #FECDD3 !important;
+    }
+    .status-select-closed {
+      background: #EDF1F6 !important;
+      color: #53657D !important;
+      border: 1px solid #CBD5E1 !important;
+    }
+
+    /* Table Action Buttons */
+    .table-actions-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .btn-table-triage {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid #BFDBFE;
+      padding: 3px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-table-triage:hover {
+      background: #DBEAFE;
+      color: #1D4ED8;
+    }
+
+    .btn-table-details {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #CBD5E1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn-table-details:hover {
+      background: #E2E8F0;
+      color: #1E293B;
+    }
+    .btn-table-delete:hover {
+      background: #FFE2E2;
+      border-color: #F87171;
+    }
+
+    /* Modal Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(20, 45, 89, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #FFFFFF;
+      border: 1px solid #DCE7F5;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 720px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px 32px;
+      box-shadow: 0 20px 25px -5px rgba(42, 75, 130, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand-container">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">AI Maintenance Ticket Prioritization Agent</div>
+        <div class="brand-subtitle">Intelligent Maintenance Triage for Renewable Energy Assets</div>
+      </div>
+    </div>
+    <div class="status-badge" id="backend-status-badge">
+      <div class="pulse-dot" id="backend-status-dot"></div>
+      <span id="backend-status-text">Backend Active • SQLite Connected</span>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Top KPI Dashboard (4 Distinct Pastel Cards) -->
+    <div class="metrics-grid">
+      <div class="metric-card card-blue">
+        <div class="metric-info">
+          <span class="metric-title">Total Tickets Processed</span>
+          <span class="metric-value" id="stat-total-tickets">0</span>
+          <span class="metric-sub">SQLite Database Records</span>
+        </div>
+        <div class="metric-icon-box">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+      </div>
+
+      <div class="metric-card card-amber">
+        <div class="metric-info">
+          <span class="metric-title">Active / Open Tickets</span>
+          <span class="metric-value" id="stat-open-tickets">0</span>
+          <span class="metric-sub">Pending Maintenance Action</span>
+        </div>
+        <div class="metric-icon-box">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+      </div>
+
+      <div class="metric-card card-red">
+        <div class="metric-info">
+          <span class="metric-title">Critical Severity Risks</span>
+          <span class="metric-value" id="stat-critical-tickets">0</span>
+          <span class="metric-sub">Immediate Emergency Attention</span>
+        </div>
+        <div class="metric-icon-box">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+      </div>
+
+      <div class="metric-card card-green">
+        <div class="metric-info">
+          <span class="metric-title">Average Priority Score</span>
+          <span class="metric-value" id="stat-avg-score">0.0</span>
+          <span class="metric-sub">Priority Range 0.0 to 100.0</span>
+        </div>
+        <div class="metric-icon-box">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="main-grid">
+      
+      <!-- Ticket Creation Workspace -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="20" height="20" fill="none" stroke="#3478F6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            Submit Maintenance Ticket for AI Triage
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Quick Sample Scenario Presets (1-Click Load):</label>
+          <div class="preset-chips">
+            <button class="preset-btn preset-solar" onclick="loadPreset('inverter')">☀️ Solar Inverter Overheating</button>
+            <button class="preset-btn preset-wind" onclick="loadPreset('gearbox')">💨 Wind Gearbox Vibration</button>
+            <button class="preset-btn preset-scada" onclick="loadPreset('scada')">📡 SCADA Telemetry Drop</button>
+            <button class="preset-btn preset-hydro" onclick="loadPreset('spillway')">💧 Hydro Spillway Gate</button>
+            <button class="preset-btn preset-pitch" onclick="loadPreset('pitch')">⚡ Blade Pitch Fault</button>
+            <button class="preset-btn preset-grid" onclick="loadPreset('curtailment')">⚙️ Grid Curtailment</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fault-description">Observed Fault / Issue Description *</label>
+          <textarea id="fault-description" placeholder="Describe asset alarm, observed anomaly, temperature rise, vibration, or SCADA telemetry loss..."></textarea>
+        </div>
+
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div>
+            <label for="asset-type">Renewable Asset Category</label>
+            <select id="asset-type">
+              <option value="solar">Solar PV Plant</option>
+              <option value="wind">Wind Turbine Generator</option>
+              <option value="hydro">Hydro Electric Power Asset</option>
+              <option value="grid">Substation & Grid Ops</option>
+              <option value="battery">Battery Storage (BESS)</option>
+            </select>
+          </div>
+          <div>
+            <label for="asset-id">Asset Unit Identifier (Optional)</label>
+            <input type="text" id="asset-id" placeholder="e.g. WTG-12, INV-04" />
+          </div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 22px;">
+          <button class="btn btn-primary" onclick="submitTicket(true)">
+            <span>⚡ Triage & Save to Database</span>
+          </button>
+          <button class="btn btn-secondary" onclick="submitTicket(false)">
+            <span>🔍 Live Preview Analysis</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Analysis Output Card -->
+      <div class="card" id="analysis-card">
+        <div class="card-header">
+          <span class="card-title">
+            <svg width="20" height="20" fill="none" stroke="#0D9488" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            AI Triage Diagnosis & Actionable Insights
+          </span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-reset-analysis" class="preset-btn" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#475569; display:none;" onclick="resetAnalysisToEmpty()">✕ Reset to Overview</button>
+            <span id="analysis-timestamp" style="font-size: 12px; color: #7184A3; font-weight: 500;">Ready</span>
+          </div>
+        </div>
+
+        <div id="analysis-content">
+          <div class="analysis-placeholder">
+            <div class="empty-hero-container">
+              <img src="/static/renewable_assets.png" alt="Renewable Energy Infrastructure (Solar, Wind, Hydro, Grid, Battery)" class="empty-hero-img" />
+            </div>
+            <p class="empty-heading">AI Triage Diagnosis Ready</p>
+            <p class="empty-desc">
+              Select a sample scenario preset on the left or enter asset telemetry to execute the agentic triage pipeline — computing real-time priority scores (0-100), root cause diagnoses, OSHA safety alerts, and historical RAG matches.
+            </p>
+            <div class="empty-feature-tags">
+              <span class="empty-feature-tag">⚡ Multi-Factor Priority Scoring (0-100)</span>
+              <span class="empty-feature-tag">🔍 TF-IDF Semantic RAG Retrieval</span>
+              <span class="empty-feature-tag">🛡️ OSHA Safety Guardrails</span>
+              <span class="empty-feature-tag">📋 Specialized Crew Auto-Routing</span>
+            </div>
+            <button class="btn-quick-sample-demo" onclick="loadPreset('inverter'); submitTicket(false);">
+              <span>⚡ Run Sample Demo: Solar Inverter Fault</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Ticket Management Database Table -->
+    <div class="card-queue">
+      <div class="card-header">
+        <span class="queue-title">
+          <div class="queue-icon-box">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s-8-1.79-8-4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+          </div>
+          Persisted Maintenance Queue (SQLite Database)
+        </span>
+        <button class="btn-reset-seed" onclick="seedDatabase()">
+          🔄 Reset / Seed Benchmark Dataset
+        </button>
+      </div>
+
+      <!-- Structured Queue Control & Filter Center (Zero Dropdown Overlap!) -->
+      <div class="queue-toolbar-card">
+        <!-- Row 1: Universal Search, Counter, Reset -->
+        <div class="toolbar-top-row">
+          <div class="search-input-wrapper">
+            <div class="search-box-inner">
+              <svg class="search-icon-svg" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <input type="text" id="search-input" class="filter-search-input" placeholder="Search ticket ID, observed fault anomaly, category, team..." oninput="handleSearchChange()" />
+              <button class="clear-search-btn" id="clear-search-btn" onclick="clearSearch()" title="Clear search">✕</button>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="table-record-counter" id="table-record-counter">Showing 0 tickets</div>
+            <button class="btn-reset-filters" onclick="resetAllFilters()" title="Reset all filters">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              Reset All
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2: RENEWABLE ASSET TYPE (1-Click Interactive Pills - Full Names, No Shortcuts) -->
+        <div class="toolbar-filter-section">
+          <span class="filter-section-label">Renewable Asset Category:</span>
+          <div class="pill-group asset-pills">
+            <button class="filter-pill active" data-asset="all" onclick="selectAssetFilter('all')">
+              All Assets (<span id="chip-count-all">0</span>)
+            </button>
+            <button class="filter-pill pill-solar" data-asset="solar" onclick="selectAssetFilter('solar')">
+              ☀️ Solar PV Array (<span id="chip-count-solar">0</span>)
+            </button>
+            <button class="filter-pill pill-wind" data-asset="wind" onclick="selectAssetFilter('wind')">
+              💨 Wind Turbine Generator (<span id="chip-count-wind">0</span>)
+            </button>
+            <button class="filter-pill pill-hydro" data-asset="hydro" onclick="selectAssetFilter('hydro')">
+              💧 Hydroelectric Power (<span id="chip-count-hydro">0</span>)
+            </button>
+            <button class="filter-pill pill-grid" data-asset="grid" onclick="selectAssetFilter('grid')">
+              ⚙️ Substation & Grid Ops (<span id="chip-count-grid">0</span>)
+            </button>
+            <button class="filter-pill pill-battery" data-asset="battery" onclick="selectAssetFilter('battery')">
+              🔋 Battery Storage BESS (<span id="chip-count-battery">0</span>)
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 3: SEVERITY LEVEL & WORKFLOW STATUS (1-Click Pills - Zero Overlapping!) -->
+        <div class="toolbar-subfilters-row">
+          <div class="subfilter-block">
+            <span class="filter-section-label">Severity Level:</span>
+            <div class="pill-group sev-pills">
+              <button class="filter-pill active" data-sev="all" onclick="selectSeverityFilter('all')">All Severities</button>
+              <button class="filter-pill pill-critical" data-sev="critical" onclick="selectSeverityFilter('critical')">🔴 Critical</button>
+              <button class="filter-pill pill-high" data-sev="high" onclick="selectSeverityFilter('high')">🟠 High</button>
+              <button class="filter-pill pill-medium" data-sev="medium" onclick="selectSeverityFilter('medium')">🟡 Medium</button>
+              <button class="filter-pill pill-low" data-sev="low" onclick="selectSeverityFilter('low')">🟢 Low</button>
+            </div>
+          </div>
+
+          <div class="subfilter-block">
+            <span class="filter-section-label">Workflow Status:</span>
+            <div class="pill-group status-pills">
+              <button class="filter-pill active" data-status="all" onclick="selectStatusFilter('all')">All Statuses</button>
+              <button class="filter-pill pill-open" data-status="open" onclick="selectStatusFilter('open')">🔵 Open</button>
+              <button class="filter-pill pill-in_progress" data-status="in_progress" onclick="selectStatusFilter('in_progress')">🟣 In Progress</button>
+              <button class="filter-pill pill-resolved" data-status="resolved" onclick="selectStatusFilter('resolved')">🟢 Resolved</button>
+              <button class="filter-pill pill-escalated" data-status="escalated" onclick="selectStatusFilter('escalated')">🔴 Escalated</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clean Framed Table Container - Fits 100% in One Screen (Zero Horizontal Scroll!) -->
+      <div class="table-card-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-id">Ticket ID</th>
+              <th class="col-asset">Asset Type</th>
+              <th class="col-desc">Observed Fault Description</th>
+              <th class="col-cat">Failure Category</th>
+              <th class="col-sev">Severity</th>
+              <th class="col-score">Priority</th>
+              <th class="col-team">Assigned Team</th>
+              <th class="col-status">Status</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-table-body">
+            <tr>
+              <td colspan="9" style="text-align: center; color: #7184A3; padding: 24px;">Loading tickets from database...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Model Evaluation & Performance Rubric -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">
+          <svg width="20" height="20" fill="none" stroke="#3478F6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Model Evaluation & Assessment Performance Rubric
+        </span>
+        <button class="preset-btn preset-pitch" onclick="fetchEvaluation()">Refresh Evaluation</button>
+      </div>
+
+      <div id="evaluation-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 18px; border-radius: 14px;">
+          <h4 style="color: #142D59; margin-bottom: 8px; font-weight: 700;">Benchmark Validation Accuracy</h4>
+          <p style="font-size: 13px; color: #7184A3;">Evaluated against benchmark dataset (maintenance_tickets.csv):</p>
+          <ul style="margin-top: 10px; font-size: 13.5px; padding-left: 20px; color: #455B7B;" id="eval-metrics-list">
+            <li>Loading evaluation metrics...</li>
+          </ul>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 18px; border-radius: 14px;">
+          <h4 style="color: #075985; margin-bottom: 8px; font-weight: 700;">Production Limitations & Recommendations</h4>
+          <ul style="font-size: 13px; color: #7184A3; padding-left: 20px;" id="eval-limits-list">
+            <li>Loading limitations...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="ticket-modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid #DCE7F5;">
+        <h3 id="modal-ticket-id" style="color: #142D59; font-weight: 700;">Ticket Details</h3>
+        <button onclick="closeModal()" style="background: 0; border: 0; color: #7184A3; font-size: 24px; cursor: pointer;">&times;</button>
+      </div>
+      <div id="modal-body-content"></div>
+    </div>
+  </div>
+
+  <script>
+    const PRESETS = {
+      inverter: {
+        text: "Inverter 4 tripping repeatedly after noon, high temperature alarm visible",
+        asset_type: "solar",
+        asset_id: "INV-04"
+      },
+      gearbox: {
+        text: "Gearbox vibration has increased for turbine WTG-12 with abnormal noise",
+        asset_type: "wind",
+        asset_id: "WTG-12"
+      },
+      scada: {
+        text: "SCADA data missing for block 3 for last two hours",
+        asset_type: "solar",
+        asset_id: "BLK-03"
+      },
+      spillway: {
+        text: "Inspection checklist pending for spillway gate maintenance",
+        asset_type: "hydro",
+        asset_id: "HYD-SP-01"
+      },
+      pitch: {
+        text: "Blade pitch error after high wind gust event",
+        asset_type: "wind",
+        asset_id: "WTG-08"
+      },
+      curtailment: {
+        text: "Curtailment instruction not reflected in generation dashboard",
+        asset_type: "grid",
+        asset_id: "SUB-PPC-01"
+      }
+    };
+
+    function loadPreset(key) {
+      const p = PRESETS[key];
+      if (p) {
+        document.getElementById('fault-description').value = p.text;
+        document.getElementById('asset-type').value = p.asset_type;
+        document.getElementById('asset-id').value = p.asset_id;
+      }
+    }
+
+    async function fetchMetrics() {
+      try {
+        const res = await fetch('/api/metrics');
+        if (!res.ok) return;
+        const m = await res.json();
+        document.getElementById('stat-total-tickets').textContent = m.total_tickets;
+        document.getElementById('stat-open-tickets').textContent = m.open_tickets;
+        document.getElementById('stat-critical-tickets').textContent = m.critical_tickets;
+        document.getElementById('stat-avg-score').textContent = m.avg_priority_score;
+      } catch(e) {
+        console.error("Failed to fetch metrics", e);
+      }
+    }
+
+    let currentAssetFilter = 'all';
+    let currentSeverityFilter = 'all';
+    let currentStatusFilter = 'all';
+
+    function selectAssetFilter(asset) {
+      currentAssetFilter = asset;
+      updatePillGroupUI('.asset-pills .filter-pill', 'data-asset', asset);
+      fetchTickets();
+    }
+
+    function selectSeverityFilter(sev) {
+      currentSeverityFilter = sev;
+      updatePillGroupUI('.sev-pills .filter-pill', 'data-sev', sev);
+      fetchTickets();
+    }
+
+    function selectStatusFilter(status) {
+      currentStatusFilter = status;
+      updatePillGroupUI('.status-pills .filter-pill', 'data-status', status);
+      fetchTickets();
+    }
+
+    function updatePillGroupUI(selector, attr, activeVal) {
+      document.querySelectorAll(selector).forEach(btn => {
+        if (btn.getAttribute(attr) === activeVal) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function handleSearchChange() {
+      const val = document.getElementById('search-input').value;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
+      fetchTickets();
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      fetchTickets();
+    }
+
+    function resetAllFilters() {
+      document.getElementById('search-input').value = '';
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (clearBtn) clearBtn.style.display = 'none';
+      currentAssetFilter = 'all';
+      currentSeverityFilter = 'all';
+      currentStatusFilter = 'all';
+      updatePillGroupUI('.asset-pills .filter-pill', 'data-asset', 'all');
+      updatePillGroupUI('.sev-pills .filter-pill', 'data-sev', 'all');
+      updatePillGroupUI('.status-pills .filter-pill', 'data-status', 'all');
+      fetchTickets();
+    }
+
+    async function fetchTickets() {
+      const search = document.getElementById('search-input').value;
+      let url = `/api/tickets?search=${encodeURIComponent(search)}&asset_type=${currentAssetFilter}&severity=${currentSeverityFilter}&status=${currentStatusFilter}`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        renderTicketsTable(data.tickets);
+      } catch (e) {
+        console.error("Failed to fetch tickets", e);
+      }
+    }
+
+    function getScoreBadgeClass(score) {
+      const s = parseFloat(score);
+      if (s >= 80) return 'score-badge-red';
+      if (s >= 60) return 'score-badge-orange';
+      if (s >= 40) return 'score-badge-amber';
+      return 'score-badge-green';
+    }
+
+    function getFullAssetLabel(asset) {
+      const a = (asset || '').toLowerCase();
+      if (a === 'solar') return 'Solar PV Array';
+      if (a === 'wind') return 'Wind Turbine Generator';
+      if (a === 'hydro') return 'Hydroelectric Power';
+      if (a === 'grid') return 'Substation & Grid Ops';
+      if (a === 'battery') return 'Battery Storage BESS';
+      return asset || 'Asset';
+    }
+
+    function getAssetIcon(asset) {
+      const a = (asset || '').toLowerCase();
+      if (a === 'solar') return '☀️';
+      if (a === 'wind') return '💨';
+      if (a === 'hydro') return '💧';
+      if (a === 'grid') return '⚙️';
+      if (a === 'battery') return '🔋';
+      return '⚡';
+    }
+
+    function renderTicketsTable(tickets) {
+      const tbody = document.getElementById('tickets-table-body');
+      const counterBadge = document.getElementById('table-record-counter');
+      const count = tickets ? tickets.length : 0;
+      if (counterBadge) {
+        counterBadge.textContent = `Showing ${count} ticket${count === 1 ? '' : 's'}`;
+      }
+
+      if (!tickets || tickets.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #7184A3; padding: 28px; font-weight: 500;">No tickets found matching filters. Try selecting a different asset or clearing filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = tickets.map(t => {
+        const scoreCls = getScoreBadgeClass(t.priority_score);
+        const statusCls = `status-select-${t.status}`;
+        return `
+        <tr>
+          <td class="col-id"><span class="badge-ticket-id">${t.ticket_id}</span></td>
+          <td class="col-asset">
+            <div class="asset-display-box">
+              <span class="badge-asset">${getAssetIcon(t.asset_type)} ${getFullAssetLabel(t.asset_type)}</span>
+              ${t.asset_id ? `<div class="asset-unit-label">Unit: ${t.asset_id}</div>` : ''}
+            </div>
+          </td>
+          <td class="col-desc"><div class="cell-desc">${t.description}</div></td>
+          <td class="col-cat"><span class="badge-category">${t.category_label}</span></td>
+          <td class="col-sev"><span class="severity-badge sev-${t.severity}">${t.severity}</span></td>
+          <td class="col-score">
+            <span class="priority-pill ${scoreCls}">${t.priority_score}</span>
+            <div class="score-sub-label">${t.priority_label}</div>
+          </td>
+          <td class="col-team"><span class="badge-team">${t.assigned_team}</span></td>
+          <td class="col-status">
+            <select class="status-select ${statusCls}" onchange="updateTicketStatus('${t.ticket_id}', this.value)">
+              <option value="open" ${t.status==='open'?'selected':''}>Open</option>
+              <option value="in_progress" ${t.status==='in_progress'?'selected':''}>In Progress</option>
+              <option value="resolved" ${t.status==='resolved'?'selected':''}>Resolved</option>
+              <option value="escalated" ${t.status==='escalated'?'selected':''}>Escalated</option>
+              <option value="closed" ${t.status==='closed'?'selected':''}>Closed</option>
+            </select>
+          </td>
+          <td class="col-actions">
+            <div class="table-actions-stack">
+              <button onclick="loadTicketIntoTriage('${t.ticket_id}')" class="btn-table-triage" title="Triage with AI">⚡ Triage</button>
+              <button onclick="viewTicketModal('${t.ticket_id}')" class="btn-table-details" title="Details">Details</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    async function loadTicketIntoTriage(id) {
+      try {
+        const res = await fetch(`/api/tickets/${id}`);
+        if (!res.ok) return;
+        const ticket = await res.json();
+        renderAnalysisCard(ticket);
+        const card = document.getElementById('analysis-card');
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } catch (e) {
+        console.error("Failed to load ticket for triage", e);
+      }
+    }
+
+    function resetAnalysisToEmpty() {
+      document.getElementById('analysis-timestamp').textContent = 'Ready';
+      const resetBtn = document.getElementById('btn-reset-analysis');
+      if (resetBtn) resetBtn.style.display = 'none';
+
+      document.getElementById('analysis-content').innerHTML = `
+        <div class="analysis-placeholder">
+          <div class="empty-hero-container">
+            <img src="/static/renewable_assets.png" alt="Renewable Energy Infrastructure (Solar, Wind, Hydro, Grid, Battery)" class="empty-hero-img" />
+          </div>
+          <p class="empty-heading">AI Triage Diagnosis Ready</p>
+          <p class="empty-desc">
+            Select a sample scenario preset on the left or enter asset telemetry to execute the agentic triage pipeline — computing real-time priority scores (0-100), root cause diagnoses, OSHA safety alerts, and historical RAG matches.
+          </p>
+          <div class="empty-feature-tags">
+            <span class="empty-feature-tag">⚡ Multi-Factor Priority Scoring (0-100)</span>
+            <span class="empty-feature-tag">🔍 TF-IDF Semantic RAG Retrieval</span>
+            <span class="empty-feature-tag">🛡️ OSHA Safety Guardrails</span>
+            <span class="empty-feature-tag">📋 Specialized Crew Auto-Routing</span>
+          </div>
+          <button class="btn-quick-sample-demo" onclick="loadPreset('inverter'); submitTicket(false);">
+            <span>⚡ Run Sample Demo: Solar Inverter Fault</span>
+          </button>
+        </div>
+      `;
+    }
+
+    async function submitTicket(saveToDb) {
+      const text = document.getElementById('fault-description').value.trim();
+      if (!text) {
+        alert("Please enter a fault description.");
+        return;
+      }
+      const asset_type = document.getElementById('asset-type').value;
+      const asset_id = document.getElementById('asset-id').value;
+
+      const endpoint = saveToDb ? '/api/tickets' : '/api/analyze';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ description: text, asset_type, asset_id })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Error: " + (err.detail || "Failed to analyze ticket"));
+          return;
+        }
+        const data = await res.json();
+        renderAnalysisCard(data);
+
+        if (saveToDb) {
+          fetchMetrics();
+          fetchTickets();
+          updateAssetChipCounts();
+        }
+      } catch(e) {
+        alert("API connection failed: " + e.message);
+      }
+    }
+
+    function renderAnalysisCard(d) {
+      const container = document.getElementById('analysis-content');
+      document.getElementById('analysis-timestamp').textContent = 'Analyzed just now';
+      const resetBtn = document.getElementById('btn-reset-analysis');
+      if (resetBtn) resetBtn.style.display = 'inline-block';
+
+      const sevColor = d.severity === 'critical' ? '#B42318' : (d.severity === 'high' ? '#B45309' : (d.severity === 'medium' ? '#854D0E' : '#087A55'));
+
+      let html = `
+        ${d.safety_escalation ? `
+          <div class="card-alert-rose">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 20 20" style="flex-shrink: 0;"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <div>
+              <strong style="font-weight: 700;">SAFETY ALERT:</strong> ${d.safety_warning || 'Critical hazard flagged.'}
+            </div>
+          </div>
+        ` : ''}
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+          <div>
+            <span class="severity-badge sev-${d.severity}">${d.severity}</span>
+            <span style="font-size: 13.5px; color: #7184A3; font-weight: 600; margin-left: 10px;">${d.category_label}</span>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 28px; font-weight: 800; color: ${sevColor};">${d.priority_score} <small style="font-size: 12px; color: #7184A3; font-weight: 500;">/ 100</small></div>
+            <div style="font-size: 11px; font-weight: 700; color: #7184A3;">${d.priority_label}</div>
+          </div>
+        </div>
+
+        <div class="score-meter">
+          <div class="score-fill" style="width: ${d.priority_score}%; background: ${sevColor};"></div>
+        </div>
+
+        <div class="card-insight-violet" style="font-size: 13.5px;">
+          <div style="color: #6D28D9; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Probable Root Cause (AI Diagnosis)</div>
+          <div style="font-weight: 600; margin-top: 4px; color: #4C1D95;">${d.probable_root_cause}</div>
+        </div>
+
+        <div class="card-insight-green" style="font-size: 13.5px;">
+          <div style="color: #087A55; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Recommended Next Action</div>
+          <div style="font-weight: 600; margin-top: 4px; color: #064E3B;">${d.recommended_action}</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; font-size: 13px;">
+          <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 12px 14px; border-radius: 10px;">
+            <span style="color: #7184A3; font-size: 11px; display: block; font-weight: 600;">Assigned Maintenance Team</span>
+            <strong style="color: #1D4ED8; font-size: 13.5px;">${d.assigned_team}</strong>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 12px 14px; border-radius: 10px;">
+            <span style="color: #7184A3; font-size: 11px; display: block; font-weight: 600;">Human Review Status</span>
+            <strong style="color: ${d.human_review_required ? '#B45309' : '#087A55'}; font-size: 13.5px;">${d.human_review_required ? 'Mandatory Review' : 'Auto-Routed'}</strong>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #7184A3; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">RAG Historical Similar Matches:</div>
+          ${d.similar_tickets && d.similar_tickets.length > 0 ? d.similar_tickets.map(m => `
+            <div class="card-insight-blue">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="color: #1D4ED8; font-size: 13.5px;">${m.ticket_id} (${m.asset_type.toUpperCase()})</strong>
+                <span style="color: #087A55; font-weight: 700; font-size: 12.5px; background: #EAFBF1; padding: 2px 8px; border-radius: 6px; border: 1px solid #A7F3D0;">Match: ${(m.similarity_score * 100).toFixed(1)}%</span>
+              </div>
+              <div style="color: #455B7B; font-size: 12.5px; margin-top: 4px;">${m.description}</div>
+            </div>
+          `).join('') : '<div style="font-size: 13px; color: #7184A3;">No historical matches found.</div>'}
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    async function updateTicketStatus(id, newStatus) {
+      try {
+        const res = await fetch(`/api/tickets/${id}/status`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          fetchMetrics();
+        }
+      } catch(e) {
+        console.error("Failed to update status", e);
+      }
+    }
+
+    async function deleteTicket(id) {
+      if (!confirm(`Are you sure you want to delete ticket ${id}?`)) return;
+      try {
+        const res = await fetch(`/api/tickets/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          fetchMetrics();
+          fetchTickets();
+          updateAssetChipCounts();
+        }
+      } catch(e) {
+        console.error("Failed to delete ticket", e);
+      }
+    }
+
+    async function seedDatabase() {
+      try {
+        const res = await fetch('/api/seed', { method: 'POST' });
+        if (res.ok) {
+          alert("Database seeded with benchmark dataset!");
+          fetchMetrics();
+          fetchTickets();
+          updateAssetChipCounts();
+        }
+      } catch(e) {
+        console.error("Failed to seed db", e);
+      }
+    }
+
+    async function fetchEvaluation() {
+      try {
+        const res = await fetch('/api/evaluation');
+        if (!res.ok) return;
+        const e = await res.json();
+        
+        document.getElementById('eval-metrics-list').innerHTML = `
+          <li style="margin-bottom: 6px;">Total Labeled Samples: <strong>${e.total_labeled_examples}</strong></li>
+          <li style="margin-bottom: 6px;">Category Accuracy: <strong style="color: #087A55;">${(e.category_accuracy * 100).toFixed(1)}%</strong> (${e.category_correct}/${e.total_labeled_examples})</li>
+          <li style="margin-bottom: 6px;">Severity Accuracy: <strong style="color: #1D4ED8;">${(e.severity_accuracy * 100).toFixed(1)}%</strong> (${e.severity_correct}/${e.total_labeled_examples})</li>
+          <li>Methodology: <em>${e.method}</em></li>
+        `;
+
+        document.getElementById('eval-limits-list').innerHTML = e.limitations.map(l => `<li style="margin-bottom: 6px;">${l}</li>`).join('');
+      } catch(err) {
+        console.error("Failed to fetch evaluation", err);
+      }
+    }
+
+    async function viewTicketModal(id) {
+      try {
+        const res = await fetch(`/api/tickets/${id}`);
+        if (!res.ok) return;
+        const t = await res.json();
+        
+        document.getElementById('modal-ticket-id').textContent = `Ticket Details: ${t.ticket_id}`;
+        document.getElementById('modal-body-content').innerHTML = `
+          <div style="font-size: 14px; margin-bottom: 14px; line-height: 1.8;">
+            <strong>Asset Type:</strong> ${t.asset_type.toUpperCase()} ${t.asset_id ? `(${t.asset_id})` : ''}<br/>
+            <strong>Workflow Status:</strong> <span style="text-transform: capitalize; font-weight: 600;">${t.status}</span><br/>
+            <strong>Timestamp:</strong> ${new Date(t.created_at).toLocaleString()}<br/>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 14px; border-radius: 10px; margin-bottom: 14px; font-size: 13.5px;">
+            <strong style="color: #142D59;">Observed Fault Description:</strong><br/>
+            <span style="color: #455B7B; display: block; margin-top: 4px;">${t.description}</span>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 14px; border-radius: 10px; margin-bottom: 14px; font-size: 13.5px;">
+            <strong style="color: #142D59;">Priority Score Formula Breakdown (Total Score: ${t.priority_score}/100):</strong>
+            <ul style="margin-top: 6px; padding-left: 20px; color: #455B7B;">
+              <li>Base Severity Score (${t.severity}): ${t.priority_breakdown.base_severity_score}</li>
+              ${t.priority_breakdown.modifiers.map(m => `<li>${m}</li>`).join('')}
+            </ul>
+          </div>
+          <div style="background: #F8FAFC; border: 1px solid #DCE7F5; padding: 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 16px;">
+            <strong>Probable Cause:</strong> ${t.probable_root_cause}<br/>
+            <strong style="color: #087A55; display: block; margin-top: 6px;">Recommended Action:</strong> ${t.recommended_action}
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #E2ECF8;">
+            <button onclick="deleteTicket('${t.ticket_id}'); closeModal();" class="btn-table-delete" style="padding: 7px 14px;">🗑️ Delete Ticket</button>
+            <button onclick="loadTicketIntoTriage('${t.ticket_id}'); closeModal();" class="btn-quick-sample-demo" style="padding: 7px 16px; font-size: 12.5px;">⚡ Open in AI Triage Panel</button>
+          </div>
+        `;
+        document.getElementById('ticket-modal').style.display = 'flex';
+      } catch(e) {
+        console.error("Failed to load ticket modal", e);
+      }
+    }
+
+    async function updateAssetChipCounts() {
+      try {
+        const res = await fetch('/api/tickets?limit=100');
+        if (!res.ok) return;
+        const data = await res.json();
+        const tickets = data.tickets || [];
+        const counts = { all: tickets.length, solar: 0, wind: 0, hydro: 0, grid: 0, battery: 0 };
+        tickets.forEach(t => {
+          const a = (t.asset_type || '').toLowerCase();
+          if (counts[a] !== undefined) counts[a]++;
+        });
+        const elAll = document.getElementById('chip-count-all');
+        const elSolar = document.getElementById('chip-count-solar');
+        const elWind = document.getElementById('chip-count-wind');
+        const elHydro = document.getElementById('chip-count-hydro');
+        const elGrid = document.getElementById('chip-count-grid');
+        const elBattery = document.getElementById('chip-count-battery');
+        if (elAll) elAll.textContent = counts.all;
+        if (elSolar) elSolar.textContent = counts.solar;
+        if (elWind) elWind.textContent = counts.wind;
+        if (elHydro) elHydro.textContent = counts.hydro;
+        if (elGrid) elGrid.textContent = counts.grid;
+        if (elBattery) elBattery.textContent = counts.battery;
+      } catch(e) {
+        console.error("Failed to update asset chip counts", e);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('ticket-modal').style.display = 'none';
+    }
+
+    async function checkBackendHealth() {
+      const badge = document.getElementById('backend-status-badge');
+      const text = document.getElementById('backend-status-text');
+      try {
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          if (badge) badge.classList.remove('status-offline');
+          if (text) text.textContent = 'Backend Active • SQLite Connected';
+        } else {
+          throw new Error('Non-200 response');
+        }
+      } catch(e) {
+        if (badge) badge.classList.add('status-offline');
+        if (text) text.textContent = 'Backend Offline';
+      }
+    }
+
+    // Initialize on page load
+    window.onload = () => {
+      checkBackendHealth();
+      fetchMetrics();
+      fetchTickets();
+      updateAssetChipCounts();
+      fetchEvaluation();
+    };
+  </script>
+</body>
+</html>
